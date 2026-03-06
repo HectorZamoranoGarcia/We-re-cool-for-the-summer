@@ -1,0 +1,58 @@
+name: app_comidas
+description: "Offline-first grocery price tracker and pantry manager for the European market."
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+# ---------------------------------------------------------------------------
+# Runtime dependencies
+# ---------------------------------------------------------------------------
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Persistence (Drift & SQLite)
+  drift: ^2.21.1
+  sqlite3_flutter_libs: ^0.5.24
+  sqlite3: ^2.4.6
+  path_provider: ^2.1.5
+  path: ^1.9.0                    # p.join() used in _openConnection()
+
+  # Networking
+  dio: ^5.7.0                     # HTTP client for Open Food Facts API
+
+  # State management & dependency injection
+  flutter_riverpod: ^2.5.3        # Riverpod core + Flutter integration
+  hooks_riverpod: ^2.5.3          # HookConsumerWidget for scanner
+  riverpod_annotation: ^2.3.5     # @riverpod annotations for code-gen
+
+  # Navigation
+  go_router: ^14.6.2              # Declarative router (StatefulShellRoute)
+
+  # UI & animation
+  flutter_animate: ^4.5.0         # Micro-animations (.animate())
+  fl_chart: ^0.69.0               # Line chart on price history screen
+  google_fonts: ^6.2.1            # Inter font family (AppTheme)
+
+  # Hardware
+  mobile_scanner: ^5.2.3          # Camera barcode scanning
+
+# ---------------------------------------------------------------------------
+# Development-only dependencies
+# ---------------------------------------------------------------------------
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # Code generation
+  build_runner: ^2.4.13           # Runs generators (riverpod + drift)
+  riverpod_generator: ^2.4.3      # Generates .g.dart from @riverpod
+  drift_dev: ^2.21.1              # Drift table/DAO code generator
+
+  # Linting
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
