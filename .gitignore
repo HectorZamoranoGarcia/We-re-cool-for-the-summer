@@ -50,7 +50,17 @@ app.*.map.json
 *.part.dart
 
 # Local Database
+# Local Database
 *.sqlite
 *.sqlite-*
 *.db
 *.db-journal
+
+# ── SECURITY: Files that must NEVER be committed ──────────────────────────────
+# Environment variables (Supabase URL + Anon Key)
+.env
+
+# Android App Signing — double-enforced here AND in android/.gitignore
+android/key.properties
+**/*.jks
+**/*.keystore

@@ -12,7 +12,7 @@ class LocalPantryDataSource {
   Future<void> addPantryItem(PantryItemEntity item) async {
     final companion = PantryItemsCompanion(
       productBarcode: Value(item.productBarcode),
-      quantity: Value(item.quantity),
+      grams: Value(item.grams),
       addedAt: Value(item.addedAt),
       expirationDate: Value(item.expirationDate),
       isConsumed: Value(item.isConsumed),
@@ -24,12 +24,16 @@ class LocalPantryDataSource {
     await _pantryDao.consumePantryItem(id);
   }
 
+  Future<void> consumeProduct(String barcode, double gramsToConsume) async {
+    await _pantryDao.consumeProductFifo(barcode, gramsToConsume);
+  }
+
   Stream<List<PantryItemEntity>> watchActiveInventory() {
     return _pantryDao.getActiveInventory().map((rows) => rows.map((row) {
           return PantryItemEntity(
             id: row.id,
             productBarcode: row.productBarcode,
-            quantity: row.quantity,
+            grams: row.grams,
             addedAt: row.addedAt,
             expirationDate: row.expirationDate,
             isConsumed: row.isConsumed,
@@ -42,7 +46,7 @@ class LocalPantryDataSource {
           return PantryItemEntity(
             id: row.id,
             productBarcode: row.productBarcode,
-            quantity: row.quantity,
+            grams: row.grams,
             addedAt: row.addedAt,
             expirationDate: row.expirationDate,
             isConsumed: row.isConsumed,

@@ -3,9 +3,9 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
 // Adjust these paths depending on whether your domain logic is in lib/domain or lib/src/domain.
-import '../../../lib/src/domain/repositories/i_product_repository.dart';
-import '../../../lib/src/domain/usecases/scan_product_use_case.dart';
-import '../../../lib/src/domain/models/product.dart';
+import 'package:app_comidas/domain/repositories/i_product_repository.dart';
+import 'package:app_comidas/domain/usecases/scan_product_usecase.dart';
+import 'package:app_comidas/domain/entities/product_entity.dart';
 
 // Generates the mock repository file
 @GenerateMocks([IProductRepository])
@@ -23,7 +23,7 @@ void main() {
 
   group('ScanProductUseCase Tests', () {
     const testBarcode = '8410000000001';
-    final testProduct = Product(
+    final testProduct = ProductEntity(
       barcode: testBarcode,
       name: 'Test Milk',
       brand: 'Dairy Brand',

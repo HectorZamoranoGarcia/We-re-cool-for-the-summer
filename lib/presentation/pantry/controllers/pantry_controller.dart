@@ -23,6 +23,17 @@ class PantryController extends _$PantryController {
     }
   }
 
+  /// Directly persists a fully-formed [PantryItemEntity] (used by the scanner
+  /// confirmation sheet after the user has set grams and expiry).
+  Future<void> addItem(PantryItemEntity item) async {
+    try {
+      final addUseCase = ref.read(addProductToPantryUseCaseProvider);
+      await addUseCase.execute(item);
+    } catch (e, stackTrace) {
+      state = AsyncValue.error(e, stackTrace);
+    }
+  }
+
   Future<void> scanAndAddItem(String barcode) async {
     final previousState = state;
     state = const AsyncValue.loading();
@@ -36,7 +47,7 @@ class PantryController extends _$PantryController {
       final newItem = PantryItemEntity(
         id: 0, // Assigned by SQLite
         productBarcode: product.barcode,
-        quantity: 1, // Default quantity for MVP
+        grams: 100.0, // Default to 100g per scan
         addedAt: DateTime.now(),
         expirationDate: DateTime.now().add(const Duration(days: 7)), // MVP dummy value
         isConsumed: false,

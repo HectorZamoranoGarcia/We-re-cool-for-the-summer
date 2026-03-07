@@ -9,66 +9,132 @@ import 'package:sqlite3_flutter_libs/sqlite3_flutter_libs.dart';
 import 'daos/pantry_dao.dart';
 import 'daos/price_dao.dart';
 import 'daos/product_dao.dart';
+import 'sync_status.dart';
 import 'tables.dart';
 
 part 'app_database.g.dart';
 
 @DriftDatabase(
-  tables: [Products, Supermarkets, PriceRecords, PantryItems],
+  tables: [Products, PriceRecords, PantryItems],
   daos: [ProductDao, PantryDao, PriceDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
       onCreate: (Migrator m) async {
         await m.createAll();
-        // Seed the database with core European chains upon first creation.
-        await _seedSupermarkets();
+        await _seedDummyData();
       },
       beforeOpen: (details) async {
         // Enable foreign-key enforcement for referential integrity.
         await customStatement('PRAGMA foreign_keys = ON');
       },
+      onUpgrade: (Migrator m, int from, int to) async {
+        if (from < 3) {
+          // v2 -> v3: Add hybrid-sync columns to pantry_items.
+          await m.addColumn(pantryItems, pantryItems.userId);
+          await m.addColumn(pantryItems, pantryItems.updatedAt);
+          await m.addColumn(pantryItems, pantryItems.syncStatus);
+        }
+      },
     );
   }
 
-  Future<void> _seedSupermarkets() async {
-    final List<SupermarketsCompanion> initialChains = [
-      const SupermarketsCompanion(
-        name: Value('Consum'),
-        countryCode: Value('ES'),
-        iconAssetPath: Value('assets/icons/consum.png'),
-      ),
-      const SupermarketsCompanion(
-        name: Value('Rewe'),
-        countryCode: Value('DE'),
-        iconAssetPath: Value('assets/icons/rewe.png'),
-      ),
-      const SupermarketsCompanion(
-        name: Value('Aldi'),
-        countryCode: Value('DE'),
-        iconAssetPath: Value('assets/icons/aldi.png'),
-      ),
-      const SupermarketsCompanion(
-        name: Value('Lidl'),
-        countryCode: Value('DE'),
-        iconAssetPath: Value('assets/icons/lidl.png'),
-      ),
-      const SupermarketsCompanion(
-        name: Value('Carrefour'),
-        countryCode: Value('FR'),
-        iconAssetPath: Value('assets/icons/carrefour.png'),
-      ),
-    ];
+  Future<void> _seedDummyData() async {
+    final now = DateTime.now();
 
-    await batch((batch) {
-      batch.insertAll(supermarkets, initialChains);
+    // 1. DUMMY PRODUCTS
+    final p1 = ProductsCompanion.insert(
+      barcode: '8480000165039',
+      name: 'Chicken Breast (Pechuga)',
+      brand: const Value('Hacendado'),
+      imageUrl: const Value('https://images.openfoodfacts.org/images/products/848/000/016/5039/front_es.12.400.jpg'),
+      caloriesPer100g: const Value(110),
+      proteinPer100g: const Value(23.0),
+      carbsPer100g: const Value(0.0),
+      fatsPer100g: const Value(2.0),
+    );
+
+    final p2 = ProductsCompanion.insert(
+      barcode: '8412854000305',
+      name: 'Almond Milk (Zero Sugar)',
+      brand: const Value('Alpro'),
+      imageUrl: const Value('https://images.openfoodfacts.org/images/products/841/285/400/0305/front_es.41.400.jpg'),
+      caloriesPer100g: const Value(13),
+      proteinPer100g: const Value(0.4),
+      carbsPer100g: const Value(0.0),
+      fatsPer100g: const Value(1.1),
+    );
+
+    final p3 = ProductsCompanion.insert(
+      barcode: '4056489148002',
+      name: 'Avocado 500g',
+      brand: const Value('Lidl Nature'),
+      caloriesPer100g: const Value(160),
+      proteinPer100g: const Value(2.0),
+      carbsPer100g: const Value(8.5),
+      fatsPer100g: const Value(14.7),
+    );
+
+    final p4 = ProductsCompanion.insert(
+      barcode: '8480017042835',
+      name: 'Oatmeal (Copos de Avena)',
+      brand: const Value('Consum'),
+      caloriesPer100g: const Value(370),
+      proteinPer100g: const Value(14.0),
+      carbsPer100g: const Value(59.0),
+      fatsPer100g: const Value(7.0),
+    );
+
+    await batch((b) {
+      b.insertAll(products, [p1, p2, p3, p4]);
+
+      // 2. DUMMY PRICE RECORDS (Creating price trends and cheapest comparisons)
+      // Chicken Breast Prices
+      b.insertAll(priceRecords, [
+        PriceRecordsCompanion.insert(productBarcode: p1.barcode.value, supermarketTag: Supermarket.mercadona, price: 6.50, recordedAt: Value(now.subtract(const Duration(days: 14)))),
+        PriceRecordsCompanion.insert(productBarcode: p1.barcode.value, supermarketTag: Supermarket.mercadona, price: 6.90, recordedAt: Value(now.subtract(const Duration(days: 7)))),
+        PriceRecordsCompanion.insert(productBarcode: p1.barcode.value, supermarketTag: Supermarket.mercadona, price: 7.10, recordedAt: Value(now)), // Trend Up
+        PriceRecordsCompanion.insert(productBarcode: p1.barcode.value, supermarketTag: Supermarket.lidl, price: 5.95, recordedAt: Value(now)), // Cheapest!
+      ]);
+
+      // Almond Milk Prices
+      b.insertAll(priceRecords, [
+        PriceRecordsCompanion.insert(productBarcode: p2.barcode.value, supermarketTag: Supermarket.carrefour, price: 2.15, recordedAt: Value(now.subtract(const Duration(days: 30)))),
+        PriceRecordsCompanion.insert(productBarcode: p2.barcode.value, supermarketTag: Supermarket.carrefour, price: 1.99, recordedAt: Value(now.subtract(const Duration(days: 10)))),
+        PriceRecordsCompanion.insert(productBarcode: p2.barcode.value, supermarketTag: Supermarket.consum, price: 2.20, recordedAt: Value(now)),
+      ]);
+
+      // Avocado Prices
+      b.insertAll(priceRecords, [
+        PriceRecordsCompanion.insert(productBarcode: p3.barcode.value, supermarketTag: Supermarket.lidl, price: 2.49, recordedAt: Value(now.subtract(const Duration(days: 5)))),
+        PriceRecordsCompanion.insert(productBarcode: p3.barcode.value, supermarketTag: Supermarket.aldi, price: 2.29, recordedAt: Value(now)),
+      ]);
+
+      // 3. DUMMY PANTRY ITEMS (Testing FIFO Expiration colors)
+      b.insertAll(pantryItems, [
+        // Chicken - Expires TOMORROW (Critical - Red)
+        PantryItemsCompanion.insert(productBarcode: p1.barcode.value, grams: const Value(500.0), expirationDate: Value(now.add(const Duration(days: 1)))),
+        // Chicken - Consumed Already (Greyed out)
+        PantryItemsCompanion.insert(productBarcode: p1.barcode.value, grams: const Value(250.0), isConsumed: const Value(true), expirationDate: Value(now.subtract(const Duration(days: 2)))),
+
+        // Almond Milk - Expires in 4 Days (Urgent - Amber)
+        PantryItemsCompanion.insert(productBarcode: p2.barcode.value, grams: const Value(1000.0), expirationDate: Value(now.add(const Duration(days: 4)))),
+        // Almond Milk - Expires in 20 days (Safe - Green)
+        PantryItemsCompanion.insert(productBarcode: p2.barcode.value, grams: const Value(1000.0), expirationDate: Value(now.add(const Duration(days: 20)))),
+
+        // Avocado - No expiration Date (Safe/Neutral)
+        PantryItemsCompanion.insert(productBarcode: p3.barcode.value, grams: const Value(300.0)),
+
+        // Oatmeal - Safe completely
+        PantryItemsCompanion.insert(productBarcode: p4.barcode.value, grams: const Value(2000.0), expirationDate: Value(now.add(const Duration(days: 180)))),
+      ]);
     });
   }
 }

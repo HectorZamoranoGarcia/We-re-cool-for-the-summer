@@ -5,8 +5,21 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// ---------------------------------------------------------------------------
+// SIGNING: Read credentials from android/key.properties.
+// This file is NEVER committed to version control (.gitignore enforces this).
+// ---------------------------------------------------------------------------
+import java.util.Properties
+import java.io.FileInputStream
+
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
 android {
-    namespace = "com.example.app_comidas"
+    namespace = "dev.hector.pantry"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -20,20 +33,40 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.app_comidas"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
+        applicationId = "dev.hector.pantry"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
+    // ---------------------------------------------------------------------------
+    // SIGNING CONFIGS
+    // ---------------------------------------------------------------------------
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties["keyAlias"] as String? ?: ""
+            keyPassword = keystoreProperties["keyPassword"] as String? ?: ""
+            storeFile = keystoreProperties["storeFile"]?.let { file(it as String) }
+            storePassword = keystoreProperties["storePassword"] as String? ?: ""
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // Sign with the production keystore loaded from key.properties.
+            signingConfig = signingConfigs.getByName("release")
+
+            // R8/ProGuard code shrinking + resource shrinking for a leaner .aab.
+            // Drift and Supabase are R8-compatible; no extra ProGuard rules needed.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
+        }
+        debug {
             signingConfig = signingConfigs.getByName("debug")
         }
     }

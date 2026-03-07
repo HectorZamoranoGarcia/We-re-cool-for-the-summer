@@ -4,11 +4,11 @@ import 'price_history_controller.dart';
 part 'cheapest_supermarket_controller.g.dart';
 
 class CheapestPriceModel {
-  final int supermarketId;
+  final String supermarketName;
   final double lowestPrice;
 
   const CheapestPriceModel({
-    required this.supermarketId,
+    required this.supermarketName,
     required this.lowestPrice,
   });
 }
@@ -18,7 +18,7 @@ CheapestPriceModel? cheapestSupermarket(
   CheapestSupermarketRef ref,
   String barcode,
 ) {
-  final historyAsync = ref.watch(priceHistoryProvider(barcode));
+  final historyAsync = ref.watch(rawPriceHistoryProvider(barcode));
 
   return historyAsync.whenOrNull(
     data: (history) {
@@ -31,7 +31,7 @@ CheapestPriceModel? cheapestSupermarket(
       );
 
       return CheapestPriceModel(
-        supermarketId: cheapestRecord.supermarketId,
+        supermarketName: cheapestRecord.supermarketName,
         lowestPrice: cheapestRecord.price,
       );
     },

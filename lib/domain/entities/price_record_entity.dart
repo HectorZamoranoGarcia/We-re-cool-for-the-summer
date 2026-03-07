@@ -1,7 +1,7 @@
 class PriceRecordEntity {
   final int id;
   final String productBarcode;
-  final int supermarketId;
+  final String supermarketName;
   final double price;
   final String currency;
   final DateTime recordedAt;
@@ -9,7 +9,7 @@ class PriceRecordEntity {
   const PriceRecordEntity({
     required this.id,
     required this.productBarcode,
-    required this.supermarketId,
+    required this.supermarketName,
     required this.price,
     required this.currency,
     required this.recordedAt,
@@ -18,7 +18,7 @@ class PriceRecordEntity {
   PriceRecordEntity copyWith({
     int? id,
     String? productBarcode,
-    int? supermarketId,
+    String? supermarketName,
     double? price,
     String? currency,
     DateTime? recordedAt,
@@ -26,7 +26,7 @@ class PriceRecordEntity {
     return PriceRecordEntity(
       id: id ?? this.id,
       productBarcode: productBarcode ?? this.productBarcode,
-      supermarketId: supermarketId ?? this.supermarketId,
+      supermarketName: supermarketName ?? this.supermarketName,
       price: price ?? this.price,
       currency: currency ?? this.currency,
       recordedAt: recordedAt ?? this.recordedAt,
@@ -40,7 +40,7 @@ class PriceRecordEntity {
           runtimeType == other.runtimeType &&
           id == other.id &&
           productBarcode == other.productBarcode &&
-          supermarketId == other.supermarketId &&
+          supermarketName == other.supermarketName &&
           price == other.price &&
           currency == other.currency &&
           recordedAt == other.recordedAt;
@@ -49,7 +49,7 @@ class PriceRecordEntity {
   int get hashCode =>
       id.hashCode ^
       productBarcode.hashCode ^
-      supermarketId.hashCode ^
+      supermarketName.hashCode ^
       price.hashCode ^
       currency.hashCode ^
       recordedAt.hashCode;

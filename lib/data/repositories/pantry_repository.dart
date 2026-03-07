@@ -18,6 +18,18 @@ class PantryRepository implements IPantryRepository {
   }
 
   @override
+  Future<void> consumeProduct(String barcode, double gramsToConsume) async {
+    try {
+      await _localDataSource.consumeProduct(barcode, gramsToConsume);
+    } on StateError catch (e) {
+      // Re-throw or handle the Insufficient Stock Error
+      throw Exception('insufficient stock error: ${e.message}');
+    } catch (e) {
+      throw Exception('Failed to consume product: $e');
+    }
+  }
+
+  @override
   Stream<List<PantryItemEntity>> watchActiveInventory() {
     return _localDataSource.watchActiveInventory();
   }

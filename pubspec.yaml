@@ -38,10 +38,19 @@ dependencies:
 
   # Hardware
   mobile_scanner: ^5.2.3          # Camera barcode scanning
+  shared_preferences: ^2.5.4
+  permission_handler: ^11.3.1     # Handle camera permissions cleanly
+
+  # Cloud & Auth (Supabase)
+  supabase_flutter: ^2.5.0        # Supabase SDK + GoTrue Auth
+  flutter_dotenv: ^5.1.0          # Hides SUPABASE_URL and ANON_KEY from VCS
+  google_sign_in: ^6.2.1          # Native Android Google account picker
+  url_launcher: ^6.2.5            # Legal compliance external links
 
 # ---------------------------------------------------------------------------
 # Development-only dependencies
 # ---------------------------------------------------------------------------
+  riverpod: any
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -54,5 +63,9 @@ dev_dependencies:
   # Linting
   flutter_lints: ^4.0.0
 
+  sqflite_common_ffi: any
+  mockito: any
 flutter:
   uses-material-design: true
+  assets:
+    - .env

@@ -23,6 +23,47 @@ class PantryDao extends DatabaseAccessor<AppDatabase>
         .write(const PantryItemsCompanion(isConsumed: Value(true)));
   }
 
+  /// FIFO algorithm to consume a specific amount of grams for a product.
+  /// Identifies records sorted by expirationDate (or addedAt) ASC.
+  Future<void> consumeProductFifo(String barcode, double gramsToConsume) async {
+    return transaction(() async {
+      final activeRecords = await (select(pantryItems)
+            ..where((tbl) =>
+                tbl.productBarcode.equals(barcode) &
+                tbl.isConsumed.equals(false))
+            ..orderBy([
+              (t) => OrderingTerm(
+                  expression: t.expirationDate, mode: OrderingMode.asc),
+              (t) =>
+                  OrderingTerm(expression: t.addedAt, mode: OrderingMode.asc),
+            ]))
+          .get();
+
+      double remainingToConsume = gramsToConsume;
+
+      for (final record in activeRecords) {
+        if (remainingToConsume <= 0) break;
+
+        if (record.grams <= remainingToConsume) {
+          // Consume the entire record.
+          remainingToConsume -= record.grams;
+          await consumePantryItem(record.id);
+        } else {
+          // Consume partial amount.
+          final newGrams = record.grams - remainingToConsume;
+          await (update(pantryItems)..where((tbl) => tbl.id.equals(record.id)))
+              .write(PantryItemsCompanion(grams: Value(newGrams)));
+          remainingToConsume = 0;
+        }
+      }
+
+      if (remainingToConsume > 0) {
+        throw StateError(
+            'Insufficient stock! Missing ${remainingToConsume}g for $barcode.');
+      }
+    });
+  }
+
   @override
   Stream<List<PantryItem>> getActiveInventory() {
     return (select(pantryItems)

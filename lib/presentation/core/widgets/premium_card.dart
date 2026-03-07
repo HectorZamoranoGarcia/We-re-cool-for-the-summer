@@ -21,6 +21,14 @@ class PremiumCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Dynamic colors based on theme to ensure high contrast
+    final gradStart = isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.04);
+    final gradEnd = isDark ? Colors.white.withOpacity(0.02) : Colors.black.withOpacity(0.01);
+    final borderColor = isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05);
+    final shadowColor = isDark ? Colors.black38 : Colors.black.withOpacity(0.05);
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
       child: BackdropFilter(
@@ -34,20 +42,17 @@ class PremiumCard extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Colors.white.withOpacity(0.08),
-                Colors.white.withOpacity(0.02),
-              ],
+              colors: [gradStart, gradEnd],
             ),
             border: customBorder ?? Border.all(
-              color: Colors.white.withOpacity(0.1),
+              color: borderColor,
               width: 1.5,
             ),
             boxShadow: customShadows ?? [
-              const BoxShadow(
-                color: Colors.black12,
+              BoxShadow(
+                color: shadowColor,
                 blurRadius: 10,
-                offset: Offset(0, 4),
+                offset: const Offset(0, 4),
               )
             ],
           ),

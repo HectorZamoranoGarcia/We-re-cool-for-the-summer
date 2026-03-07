@@ -1,7 +1,7 @@
 class PantryItemEntity {
   final int id;
   final String productBarcode;
-  final int quantity;
+  final double grams;
   final DateTime addedAt;
   final DateTime? expirationDate;
   final bool isConsumed;
@@ -9,7 +9,7 @@ class PantryItemEntity {
   const PantryItemEntity({
     required this.id,
     required this.productBarcode,
-    required this.quantity,
+    required this.grams,
     required this.addedAt,
     this.expirationDate,
     required this.isConsumed,
@@ -18,7 +18,7 @@ class PantryItemEntity {
   PantryItemEntity copyWith({
     int? id,
     String? productBarcode,
-    int? quantity,
+    double? grams,
     DateTime? addedAt,
     DateTime? expirationDate,
     bool? isConsumed,
@@ -26,7 +26,7 @@ class PantryItemEntity {
     return PantryItemEntity(
       id: id ?? this.id,
       productBarcode: productBarcode ?? this.productBarcode,
-      quantity: quantity ?? this.quantity,
+      grams: grams ?? this.grams,
       addedAt: addedAt ?? this.addedAt,
       expirationDate: expirationDate ?? this.expirationDate,
       isConsumed: isConsumed ?? this.isConsumed,
@@ -40,7 +40,7 @@ class PantryItemEntity {
           runtimeType == other.runtimeType &&
           id == other.id &&
           productBarcode == other.productBarcode &&
-          quantity == other.quantity &&
+          grams == other.grams &&
           addedAt == other.addedAt &&
           expirationDate == other.expirationDate &&
           isConsumed == other.isConsumed;
@@ -49,7 +49,7 @@ class PantryItemEntity {
   int get hashCode =>
       id.hashCode ^
       productBarcode.hashCode ^
-      quantity.hashCode ^
+      grams.hashCode ^
       addedAt.hashCode ^
       expirationDate.hashCode ^
       isConsumed.hashCode;

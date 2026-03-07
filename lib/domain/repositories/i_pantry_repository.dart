@@ -5,6 +5,8 @@ abstract interface class IPantryRepository {
 
   Future<void> consumePantryItem(int id);
 
+  Future<void> consumeProduct(String barcode, double gramsToConsume);
+
   Stream<List<PantryItemEntity>> watchActiveInventory();
 
   Stream<List<PantryItemEntity>> watchExpiringSoon();

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  static const Color primaryEmerald = Color(0xFF00C853);
-  static const Color darkSurface = Color(0xFF1E1E1E);
-  static const Color darkBackground = Color(0xFF121212);
+  static const Color primaryEmerald = Color(0xFF00E676); // Brighter, more saturated
+  static const Color darkSurface = Color(0xFF141414);    // Richer dark surface
+  static const Color darkBackground = Color(0xFF090909); // True AMOLED-friendly dark
 
   static ThemeData get lightTheme {
     return ThemeData(

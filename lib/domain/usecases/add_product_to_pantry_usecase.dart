@@ -10,8 +10,8 @@ class AddProductToPantryUseCase {
     if (item.expirationDate != null && item.expirationDate!.isBefore(DateTime.now())) {
       throw StateError('Cannot add product to pantry with an expiration date in the past.');
     }
-    if (item.quantity <= 0) {
-      throw ArgumentError('Quantity must be greater than zero.');
+    if (item.grams <= 0) {
+      throw ArgumentError('Grams must be greater than zero.');
     }
 
     await _pantryRepository.addPantryItem(item);

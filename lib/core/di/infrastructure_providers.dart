@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/datasources/local/app_database.dart';
 
@@ -40,4 +41,10 @@ final dioProvider = Provider<Dio>((ref) {
   );
   ref.onDispose(dio.close);
   return dio;
+});
+
+/// Exposes the global [SharedPreferences] instance.
+/// Must be overridden in the root [ProviderScope] during app bootstrap.
+final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
+  throw UnimplementedError('sharedPreferencesProvider must be overridden');
 });

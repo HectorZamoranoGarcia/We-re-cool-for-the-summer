@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:app_comidas/presentation/core/theme/app_theme.dart';
 import 'package:app_comidas/presentation/core/router/app_router.dart';
+import 'package:app_comidas/presentation/settings/controllers/settings_controller.dart';
 
 /// The root application widget.
 ///
@@ -20,6 +21,15 @@ class PantryProApp extends ConsumerWidget {
     // The GoRouter instance is provided by Riverpod so that it can access
     // other providers (e.g., auth state) reactively if needed in the future.
     final router = ref.watch(routerProvider);
+    final settingsAsyncValue = ref.watch(settingsControllerProvider);
+
+    // Default to system theme until the provider loads (it loads synchronously
+    // from disk so this is instantaneous).
+    final currentThemeMode = settingsAsyncValue.when(
+      data: (prefs) => prefs.themeMode,
+      loading: () => ThemeMode.system,
+      error: (_, __) => ThemeMode.system,
+    );
 
     return MaterialApp.router(
       title: 'PantryPro',
@@ -27,7 +37,7 @@ class PantryProApp extends ConsumerWidget {
       routerConfig: router,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      themeMode: currentThemeMode,
     );
   }
 }

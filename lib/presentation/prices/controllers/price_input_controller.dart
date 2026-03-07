@@ -9,16 +9,16 @@ class PriceInputController extends _$PriceInputController {
   @override
   FutureOr<void> build() {}
 
-  Future<void> savePrice(String barcode, int supermarketId, double price) async {
+  Future<void> savePrice(String barcode, String supermarketName, double price) async {
     state = const AsyncValue.loading();
 
     state = await AsyncValue.guard(() async {
       final recordSupermarketPriceUseCase = ref.read(recordSupermarketPriceUseCaseProvider);
 
       final entity = PriceRecordEntity(
-        id: 0, // 0 for auto-increment in DB usually, or placeholder until saved
+        id: 0,
         productBarcode: barcode,
-        supermarketId: supermarketId,
+        supermarketName: supermarketName,
         price: price,
         currency: 'EUR',
         recordedAt: DateTime.now(),

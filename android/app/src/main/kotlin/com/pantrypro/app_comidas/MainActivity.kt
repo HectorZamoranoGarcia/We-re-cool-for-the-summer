@@ -1,4 +1,4 @@
-package com.pantrypro.app_comidas
+package dev.hector.pantry
 
 import io.flutter.embedding.android.FlutterActivity
 

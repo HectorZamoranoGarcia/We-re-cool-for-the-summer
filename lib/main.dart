@@ -1,8 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'presentation/core/app.dart';
+import 'core/di/infrastructure_providers.dart';
 
 /// Logs every Riverpod provider error to the console so nothing is
 /// swallowed silently during startup.
@@ -36,7 +40,7 @@ class _DebugProviderObserver extends ProviderObserver {
   }
 }
 
-void main() {
+void main() async {
   // Catch Flutter framework errors (layout, widget-build exceptions, etc.)
   FlutterError.onError = (FlutterErrorDetails details) {
     debugPrint('🔴 FLUTTER ERROR: ${details.exception}');
@@ -54,11 +58,27 @@ void main() {
 
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Load environment variables from the .env bundled asset.
+  await dotenv.load(fileName: '.env');
+
+  // Initialize the Supabase client once globally.
+  // All subsequent accesses use Supabase.instance.client.
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+  );
+
+  debugPrint('✅ main() — initializing core dependencies');
+  final sharedPrefs = await SharedPreferences.getInstance();
+
   debugPrint('✅ main() — bindings ready, calling runApp()');
 
   runApp(
     ProviderScope(
       observers: const [_DebugProviderObserver()],
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(sharedPrefs),
+      ],
       child: const PantryProApp(),
     ),
   );
