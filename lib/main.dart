@@ -61,12 +61,17 @@ void main() async {
   // Load environment variables from the .env bundled asset.
   await dotenv.load(fileName: '.env');
 
-  // Initialize the Supabase client once globally.
-  // All subsequent accesses use Supabase.instance.client.
-  await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL']!,
-    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
-  );
+  try {
+    // Initialize the Supabase client once globally.
+    // All subsequent accesses use Supabase.instance.client.
+    await Supabase.initialize(
+      url: dotenv.env['SUPABASE_URL'] ?? '',
+      anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
+    );
+  } catch (e) {
+    debugPrint('🔴 SUPABASE INIT ERROR: $e');
+    debugPrint('   Ensure SUPABASE_URL and SUPABASE_ANON_KEY are set in .env.');
+  }
 
   debugPrint('✅ main() — initializing core dependencies');
   final sharedPrefs = await SharedPreferences.getInstance();

@@ -37,14 +37,16 @@ final routerProvider = Provider<GoRouter>((ref) {
     debugLogDiagnostics: true,
     redirect: (context, state) {
       final currentUser = ref.read(currentUserProvider);
-      final isAuthenticated = currentUser != null;
-      final isGoingToPublic = _publicRoutes.contains(state.matchedLocation);
 
-      // If not logged in and trying to access a protected route → /login
-      if (!isAuthenticated && !isGoingToPublic) return '/login';
+      // Si el usuario es null (no autenticado) y la ruta NO es /login
+      if (currentUser == null && state.matchedLocation != '/login') {
+        return '/login';
+      }
 
-      // If already logged in and trying to access /login → /dashboard
-      if (isAuthenticated && isGoingToPublic) return '/dashboard';
+      // Si el usuario NO es nulo y la ruta es /login -> dashboard (equivalente a /pantry)
+      if (currentUser != null && state.matchedLocation == '/login') {
+        return '/dashboard';
+      }
 
       return null; // No redirect needed
     },

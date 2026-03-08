@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -38,38 +39,57 @@ class SupabaseAuthRepository implements IAuthRepository {
 
   @override
   Future<void> signInWithGoogle() async {
-    // Step 1: Show native account picker and request sign-in.
-    final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+    debugPrint('👉 SupabaseAuthRepository: signInWithGoogle started.');
+    debugPrint('👉 SupabaseAuthRepository: internal _webClientId is: [$_webClientId] (Length: ${_webClientId.length})');
 
-    if (googleUser == null) {
-      // User cancelled the native picker — treat as a no-op.
-      return;
+    if (_webClientId.isEmpty) {
+      // User explicitly requested to print to console instead of throwing/disabling.
+      print('GOOGLE SIGN-IN WARNING: GOOGLE_WEB_CLIENT_ID is missing in .env.');
     }
 
-    // Step 2: Obtain the auth tokens from the selected Google account.
-    final GoogleSignInAuthentication googleAuth =
-        await googleUser.authentication;
+    try {
+      debugPrint('👉 SupabaseAuthRepository: Calling _googleSignIn.signIn() [Modal should appear here]');
+      // Step 1: Show native account picker and request sign-in.
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      debugPrint('👉 SupabaseAuthRepository: _googleSignIn.signIn() returned: ${googleUser?.email ?? "NULL"}');
 
-    final String? idToken = googleAuth.idToken;
-    final String? accessToken = googleAuth.accessToken;
+      if (googleUser == null) {
+        debugPrint('👉 SupabaseAuthRepository: googleUser is null! This usually means the user cancelled, OR the Android Configuration (SHA-1 / Client ID) on Google Cloud is incorrect, causing Google Play Services to silently reject the request.');
+        // User cancelled the native picker — treat as a no-op.
+        return;
+      }
 
-    if (idToken == null) {
-      throw Exception(
-        'Google Sign-In succeeded but returned no idToken. '
-        'Verify that the Web Client ID is correct in .env.',
+      debugPrint('👉 SupabaseAuthRepository: Proceeding to request tokens for ${googleUser.email}');
+      // Step 2: Obtain the auth tokens from the selected Google account.
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final String? idToken = googleAuth.idToken;
+      final String? accessToken = googleAuth.accessToken;
+
+      debugPrint('👉 SupabaseAuthRepository: Tokens received. idToken is ${idToken != null ? "PRESENT" : "NULL"}');
+
+      if (idToken == null) {
+        throw Exception(
+          'Google Sign-In succeeded but returned no idToken. '
+          'Verify that the Web Client ID is correct in .env.',
+        );
+      }
+
+      debugPrint('👉 SupabaseAuthRepository: Calling _client.auth.signInWithIdToken()');
+      // Step 3: Exchange the Google ID token for a Supabase JWT.
+      // Supabase validates the token signature against the Web Client ID.
+      await _client.auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: idToken,
+        accessToken: accessToken,
       );
+      debugPrint('👉 SupabaseAuthRepository: Supabase signInWithIdToken SUCCESS');
+    } catch (e, stacktrace) {
+      debugPrint('🔴 SupabaseAuthRepository EXCEPTION caught: $e');
+      debugPrint('🔴 SupabaseAuthRepository STACKTRACE:\n$stacktrace');
+      rethrow; // Let LoginScreen handle the UI error
     }
-
-    // Step 3: Exchange the Google ID token for a Supabase JWT.
-    // Supabase validates the token signature against the Web Client ID.
-    await _client.auth.signInWithIdToken(
-      provider: OAuthProvider.google,
-      idToken: idToken,
-      accessToken: accessToken,
-    );
-
-    // Step 4: authStateChanges stream emits signedIn.
-    // GoRouter's refreshListenable rebuilds the router → redirect to /dashboard.
   }
 
   @override

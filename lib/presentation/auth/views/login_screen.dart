@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../core/di/auth_providers.dart';
@@ -19,6 +20,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   String? _errorMessage;
 
   Future<void> _signInWithGoogle() async {
+    final hasGoogleConfig = (dotenv.env['GOOGLE_WEB_CLIENT_ID'] ?? '').isNotEmpty;
+
+    // As per user request: if there's no client ID, just print to console
+    // instead of crashing or disabling the button.
+    if (!hasGoogleConfig) {
+      debugPrint('ℹ️ Google Sign-In button pressed, but GOOGLE_WEB_CLIENT_ID is missing in .env');
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -31,7 +40,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       // when authStateProvider emits a signed-in event.
     } catch (e) {
       if (mounted) {
-        setState(() => _errorMessage = 'Sign-in failed. Please try again.');
+        setState(() => _errorMessage = 'Sign-in failed. Please try again or check console if Client ID is missing.');
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -76,23 +85,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 64),
 
-              // Google Sign-In button
+              // Google Sign-In button (Always Active as requested)
               _isLoading
                   ? const Center(child: CircularProgressIndicator())
-                  : OutlinedButton.icon(
+                  : ElevatedButton.icon(
                       onPressed: _signInWithGoogle,
                       icon: const Icon(Icons.login_rounded),
                       label: const Text(
                         'Continue with Google',
                         style: TextStyle(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                           fontSize: 16,
+                          letterSpacing: 0.5,
                         ),
                       ),
-                      style: OutlinedButton.styleFrom(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: accent,
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: BorderSide(color: accent, width: 2),
-                        foregroundColor: accent,
+                        elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -124,3 +135,4 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 }
+

@@ -27,7 +27,7 @@ SupabaseClient supabaseClient(SupabaseClientRef ref) {
 @riverpod
 IAuthRepository authRepository(AuthRepositoryRef ref) {
   final client = ref.watch(supabaseClientProvider);
-  final webClientId = dotenv.env['GOOGLE_WEB_CLIENT_ID']!;
+  final webClientId = dotenv.env['GOOGLE_WEB_CLIENT_ID']?.trim() ?? '';
   return SupabaseAuthRepository(client, webClientId);
 }
 
